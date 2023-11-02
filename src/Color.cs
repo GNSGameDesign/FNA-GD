@@ -34,6 +34,24 @@ namespace Microsoft.Xna.Framework
 		#region Public Properties
 
 		/// <summary>
+		/// Gets or sets the red component.
+		/// </summary>
+		public byte R
+		{
+			get
+			{
+				unchecked
+				{
+					return (byte) (this.packedValue);
+				}
+			}
+			set
+			{
+				this.packedValue = (this.packedValue & 0xffffff00) | value;
+			}
+		}
+
+		/// <summary>
 		/// Gets or sets the blue component.
 		/// </summary>
 		public byte B
@@ -66,24 +84,6 @@ namespace Microsoft.Xna.Framework
 			set
 			{
 				this.packedValue = (this.packedValue & 0xffff00ff) | ((uint) value << 8);
-			}
-		}
-
-		/// <summary>
-		/// Gets or sets the red component.
-		/// </summary>
-		public byte R
-		{
-			get
-			{
-				unchecked
-				{
-					return (byte) (this.packedValue);
-				}
-			}
-			set
-			{
-				this.packedValue = (this.packedValue & 0xffffff00) | value;
 			}
 		}
 
