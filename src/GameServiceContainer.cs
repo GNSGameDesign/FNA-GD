@@ -20,11 +20,7 @@ namespace Microsoft.Xna.Framework
 {
 	public class GameServiceContainer : IServiceProvider
 	{
-		#region Private Fields
-
 		Dictionary<Type, object> services;
-
-		#endregion
 
 		#region Public Constructors
 
