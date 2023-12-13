@@ -81,8 +81,7 @@ namespace Microsoft.Xna.Framework
 			SDL.SDL_SetMainReady();
 
 			// Also, Windows is an idiot. -flibit
-			if (	OSVersion.Equals("Windows") ||
-				OSVersion.Equals("WinRT")	)
+			if (OSVersion.Equals("Windows"))
 			{
 				// Visual Studio is an idiot.
 				if (System.Diagnostics.Debugger.IsAttached)
@@ -263,8 +262,7 @@ namespace Microsoft.Xna.Framework
 			 * the user (rightfully) will have no idea why.
 			 * -flibit
 			 */
-			if (	OSVersion.Equals("Windows") ||
-				OSVersion.Equals("WinRT")	)
+			if (OSVersion.Equals("Windows"))
 			{
 				SDL.SDL_SetHint(
 					SDL.SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS,
@@ -301,8 +299,7 @@ namespace Microsoft.Xna.Framework
 				INTERNAL_AddInstance(evt[0].cdevice.which);
 			}
 
-			if (	OSVersion.Equals("Windows") ||
-				OSVersion.Equals("WinRT")	)
+			if (OSVersion.Equals("Windows"))
 			{
 				/* Windows has terrible event pumping and doesn't give us
 				 * WM_PAINT events correctly. So we get to do this!
@@ -1545,12 +1542,6 @@ namespace Microsoft.Xna.Framework
 
 		public static DriveInfo GetDriveInfo(string storageRoot)
 		{
-			if (OSVersion.Equals("WinRT"))
-			{
-				// WinRT DriveInfo is a bunch of crap -flibit
-				return null;
-			}
-
 			DriveInfo result;
 			try
 			{
@@ -2253,6 +2244,21 @@ namespace Microsoft.Xna.Framework
 			) == SDL.SDL_bool.SDL_TRUE;
 			INTERNAL_capabilities[which] = caps;
 
+			// Get some basic information about the controller mapping
+			string deviceInfo;
+			bool overrideGUID;
+			string mapping = SDL.SDL_GameControllerMapping(INTERNAL_devices[which]);
+			if (string.IsNullOrEmpty(mapping))
+			{
+				deviceInfo = "Mapping not found";
+				overrideGUID = false;
+			}
+			else
+			{
+				deviceInfo = "Mapping: " + mapping;
+				overrideGUID = mapping.Contains("type:");
+			}
+
 			/* Store the GUID string for this device
 			 * FIXME: Replace GetGUIDEXT string with 3 short values -flibit
 			 */
@@ -2273,17 +2279,27 @@ namespace Microsoft.Xna.Framework
 				);
 			}
 
+			if (overrideGUID)
+			{
+				SDL.SDL_GameControllerType gct = SDL.SDL_GameControllerGetType(
+					INTERNAL_devices[which]
+				);
+				if (	gct == SDL.SDL_GameControllerType.SDL_CONTROLLER_TYPE_XBOX360 ||
+					gct == SDL.SDL_GameControllerType.SDL_CONTROLLER_TYPE_XBOXONE	)
+				{
+					INTERNAL_guids[which] = "xinput";
+				}
+				else if (gct == SDL.SDL_GameControllerType.SDL_CONTROLLER_TYPE_PS4)
+				{
+					INTERNAL_guids[which] = "4c05c405";
+				}
+				else if (gct == SDL.SDL_GameControllerType.SDL_CONTROLLER_TYPE_PS5)
+				{
+					INTERNAL_guids[which] = "4c05e60c";
+				}
+			}
+
 			// Print controller information to stdout.
-			string deviceInfo;
-			string mapping = SDL.SDL_GameControllerMapping(INTERNAL_devices[which]);
-			if (string.IsNullOrEmpty(mapping))
-			{
-				deviceInfo = "Mapping not found";
-			}
-			else
-			{
-				deviceInfo = "Mapping: " + mapping;
-			}
 			FNALoggerEXT.LogInfo(
 				"Controller " + which.ToString() + ": " +
 				SDL.SDL_GameControllerName(INTERNAL_devices[which]) + ", " +

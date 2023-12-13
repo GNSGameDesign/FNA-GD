@@ -9,6 +9,7 @@
 
 #region Using Statements
 using System;
+using System.Threading;
 #endregion
 
 namespace Microsoft.Xna.Framework.Graphics
@@ -63,7 +64,11 @@ namespace Microsoft.Xna.Framework.Graphics
 		{
 			if (!IsDisposed)
 			{
-				FNA3D.FNA3D_AddDisposeQuery(GraphicsDevice.GLDevice, query);
+				IntPtr toDispose = Interlocked.Exchange(ref query, IntPtr.Zero);
+				if (toDispose != IntPtr.Zero)
+				{
+					FNA3D.FNA3D_AddDisposeQuery(GraphicsDevice.GLDevice, toDispose);
+				}
 			}
 			base.Dispose(disposing);
 		}
@@ -80,22 +85,6 @@ namespace Microsoft.Xna.Framework.Graphics
 		public void End()
 		{
 			FNA3D.FNA3D_QueryEnd(GraphicsDevice.GLDevice, query);
-		}
-
-		#endregion
-
-		#region Emergency Disposal
-
-		internal override GraphicsResourceDisposalHandle[] CreateDisposalHandles()
-		{
-			return new GraphicsResourceDisposalHandle[]
-			{
-				new GraphicsResourceDisposalHandle
-				{
-					disposeAction = FNA3D.FNA3D_AddDisposeQuery,
-					resourceHandle = query
-				}
-			};
 		}
 
 		#endregion
